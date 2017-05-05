@@ -6,3 +6,7 @@
   SCAN: () => record
 
 */
+
+var {COLUMNS} = require('./test_data');
+
+console.log(COLUMNS);
