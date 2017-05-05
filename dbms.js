@@ -22,6 +22,9 @@ var selector = (predicate, scanner) => ({
 });
 
 const x = selector(equal("url", TEST_NAME), makeIterator()[Symbol.iterator]());
-console.log(x.next());
-console.log(x.next());
-console.log(x.next());
+// for (let record of makeIterator()) {
+//   console.log(record);
+// }
+// console.log(x.next());
+// console.log(x.next());
+// console.log(x.next());
