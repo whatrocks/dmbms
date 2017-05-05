@@ -2,11 +2,20 @@
 
   ROOT: () => SELECTION(PROJECTION())
   PROJECTION: ([]columns, record) => []columns
-  SELECTION: ([(columnName, operator, columnValue)], record) => record | null
+  SELECTION: ([(predicates)..], record) => record | null
   SCAN: () => record
 
 */
+var recordIndex = 0;
+var {makeIterator} = require('./test_data');
+var {columns} = require('./test_data');
 
-var {COLUMNS} = require('./test_data');
+// records.forEach(record => {
+//   // record.applyProjection(userProjection).applySelection(userSelection);
+// });
 
-console.log(COLUMNS);
+var scanner = makeIterator()[Symbol.iterator]();
+
+console.log(scanner.next());
+console.log(scanner.next());
+console.log(scanner.next());
