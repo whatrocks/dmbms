@@ -6,13 +6,13 @@
   SCAN: () => record
 
 */
-var TEST_NAME = "https://www.cia.gov/library/readingroom/document/cia-rdp80-00810a002400700005-2";
-var {equal} = require('./util.js');
-var {makeIterator} = require('./test_data');
-var {rows} = require('./test_data');
-var {columns} = require('./util');
+const TEST_NAME = "https://www.cia.gov/library/readingroom/document/cia-rdp80-00810a002400700005-2";
+const {equal} = require('./util.js');
+const {makeIterator} = require('./test_data');
+const {rows} = require('./test_data');
+const {columns} = require('./util');
 
-var selector = (predicate, scanner) => ({
+const selector = (predicate, scanner) => ({
   next () {
     const row = scanner.next().value;
     if (row === undefined) {return {done: true}}
@@ -22,38 +22,54 @@ var selector = (predicate, scanner) => ({
   }
 });
 
-function hasher(table, property) {
-  let idx = columns.indexOf(property);
-  return table.reduce((hashMap, record) => {
-    let colValue = record[idx];
-    let previousValues = hashMap[colValue] || [];
-    hashMap[colValue] = [...previousValues, record];
-    return hashMap;
 
-    return hashMap;
-  } ,{})
+/* TODO: The structure of hasher/joiner will change. It will just be:
+    HashJoin
+      |
+      |------> FileScan1 (build hash)
+          |
+          |---------> FileScan2 (return 1 record of FileScan1 on KEY joined with FileScan2 record)
+
+  So, root will call HashJoin.next():
+    - The `init` will be FileScan1 building the hash and beginning FileScan2, returning one record at a time.
+    - `next` will then continue to return one joined record a time until FileScan2 is exhausted.
+*/
+
+function hasher(table, property, theta=(record1, record2)=>true) {
+  const colIdx = columns[property];
+  return table.reduce(
+    (hashMap, record) => {
+      let colValue = record[colIdx];
+      let previousValues = hashMap[colValue] || [];
+      if (theta(colValue, record)) {
+        hashMap[colValue] = [...previousValues, record];
+      }
+
+      return hashMap;
+    },
+    {}
+  );
+
+  return hashMap;
 }
 
 // console.log(hasher(rows, "url"))
 
-function joinRecords (record1, record2, columnJoinedOn) {
-  let idx = columns.indexOf(columnJoinedOn);
-  const record1WithoutTheColumn = record1.slice(0, idx).concat(record1.slice(idx+1));
-  const record2WithoutTheColumn = record1.slice(0, idx).concat(record1.slice(idx+1));
-  return [columnJoinedOn, record1WithoutTheColumn, record2WithoutTheColumn];
-}
-
-function joiner(hashMap, property, scanner, theta=x=>true) {
+function joiner(scanner, hashMap, property) {
   const record = scanner.next().value;
-  let idx = columns.indexOf(property);
-  const colValue = record[idx];
+
+  const colIdx = columns[property];
+  const colValue = record[colIdx];
+
   const hashedRecords = hashMap[colValue];
   const numberOfReturnedJoinedRows = 0;
-  return function next () {
-    if (numberOfReturnedJoinedRows >= hashedRecords.length) {
-      return {done: true}
+  return {
+    next () {
+      if (numberOfReturnedJoinedRows >= hashedRecords.length) {
+        return {done: true}
+      }
+      return [ record, hashedRecords[numberOfReturnedJoinedRows++] ];
     }
-    return joinRecords(record, hashedRecords[numberOfReturnedJoinedRows++]);
   }
 }
 
