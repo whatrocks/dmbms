@@ -1,4 +1,6 @@
-const columns = {
+Object.prototype.iteratorFinished = function () {return Object.keys(this).length === 1 && this.done === true}
+
+const columnNameToIndex = {
   "title": 0,
   "url": 1,
   "filefilefilefilefilefile": 2,
@@ -24,11 +26,27 @@ const columns = {
   "more5_title": 22,
   "more5_link": 23
 };
+module.exports.columnNameToIndex = columnNameToIndex;
 
-module.exports.columns = columns;
+const {records} = require('./test_data.js');
+
+function buildScanner(records) {
+  let idx = 0;
+  return {
+    [Symbol.iterator] () {
+      return {
+        next () { return idx < records.length ? {value: records[idx++], done: false} : {done: true} }
+      }
+    }
+  }
+}
+module.exports.buildScanner = buildScanner;
+
 
 module.exports.equal = function(colName, value) {
   return (row) => {
-    return row[columns.indexOf(colName)] === value;
+    return row[columnNameToIndex[colName]] === value;
   }
 }
+
+// for(let record of buildScanner(records)) {console.log(record[3])}
