@@ -16,6 +16,7 @@ module.exports.hashJoin = hashJoin;
 // }
 
 function hashJoin (builder, prober, buildOptions, probeOptions) {
+  // builder and prober are instances of util/buildScanner
   let hash = [...builder].reduce(
     (hashMap, record) => {
       const colIndex = columnNameToIndex[buildOptions.colName];
