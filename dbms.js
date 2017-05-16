@@ -11,21 +11,10 @@ const {equal} = require('./util.js');
 const {buildScanner} = require('./util.js');
 const {columnNameToIndex} = require('./util.js');
 const {hashJoin} = require('./hashJoin.js');
+const {records} = require('./test_data.js');
+const {selector} = require('./selector.js');
 
-const selector = (predicate, scanner) => ({
-  next () {
-    const row = scanner.next().value;
-    if (row === undefined) {return {done: true}}
-    if (predicate(row)) {
-      return row;
-    }
-  }
-});
-
-// const x = selector(equal("url", TEST_NAME), buildScanner()[Symbol.iterator]());
-// for (let record of buildScanner()) {
-//   console.log(record);
-// }
-// console.log(x.next());
-// console.log(x.next());
-// console.log(x.next());
+const x = selector(buildScanner(records)[Symbol.iterator](), equal("url", TEST_NAME));
+console.log(x.next());
+console.log(x.next());
+console.log(x.next());
